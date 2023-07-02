@@ -44,6 +44,7 @@ const puppeteer = require("puppeteer");
 
   await fillVisaTypology();
   await fillVisaCategory();
+
   await fillVisa(0);
 
   await addFolder();
@@ -51,24 +52,18 @@ const puppeteer = require("puppeteer");
 
   await next(1);
 
-  await selectFolder(2);
-  await fillInput("surname", "saeed", 2);
-  await fillInput("name", "asdasd", 2);
-  await fillInput("birthLocalDate", "2002-12-1", 2);
-  await fillPassportInput("1234234234", 2);
-  await fillInput("applicantEmail", "nostva@gmail.com", 2);
-  await fillInput("phone", "1111970606", 2);
-  await fillInput("expectedDepartureLocalDate", "2023-12-1", 2);
+  await fillInput("surname", "saeed", 1);
+  await fillInput("name", "mohamed", 1);
+  await fillInput("birthLocalDate", "09/09/2002", 1);
+  await fillInput("passport", "eg2g1g3h5", 1);
+  await fillInput("applicantEmail", "nostva@gmail.com", 1);
+  await fillInput("phone", "1111970606", 1);
+  await fillInput("expectedDepartureLocalDate", "09/09/2023", 1);
 
   async function fillInput(field, value, folderIndex) {
-    await page.waitForSelector(`input[name="${field}"]`);
-    const inputs = await page.$$(`input[name="${field}"]`);
+    await page.waitForSelector(`app-no-form form input[name="${field}"]`);
+    const inputs = await page.$$(`app-no-form form input[name="${field}"]`);
     await inputs[folderIndex].type(value);
-  }
-  async function fillPassportInput(value, folderIndex) {
-    await page.waitForSelector(`input[name="passport"]`);
-    const inputs = await page.$$(`input[name="passport"]`);
-    await inputs[folderIndex - 1].type(value);
   }
 
   async function selectLocation(index = 0) {
