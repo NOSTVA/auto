@@ -4,6 +4,8 @@ const puppeteer = require("puppeteer");
 (async () => {
   const browser = await puppeteer.launch({
     headless: false,
+    executablePath:
+      "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
   });
 
   const page = await browser.newPage();
@@ -33,83 +35,112 @@ const puppeteer = require("puppeteer");
   ];
 
   await page.setCookie(...cookies);
-
   await page.goto(process.env.WEBSITE_URL);
 
   // ====================== script ======================
 
-  // select location
-  await page.waitForSelector(".p-dropdown-trigger .ng-tns-c73-3");
-  await page.click(".p-dropdown-trigger .ng-tns-c73-3");
-  await page.waitForSelector(".p-dropdown-item");
-  const locations = await page.$$(".p-dropdown-item");
-  await locations[Number(process.env.LOCATION_INDEX)].click();
+  await selectLocation();
+  await next(0);
 
-  // accept the terms
-  await page.waitForSelector("#flexCheckDefault");
-  const checkboxValue = true;
-  await page.evaluate((value) => {
-    const checkbox = document.querySelector("#flexCheckDefault");
-    checkbox.checked = value;
-    checkbox.dispatchEvent(new Event("change"));
-  }, checkboxValue);
+  await fillVisaTypology();
+  await fillVisaCategory();
+  await fillVisa(0);
 
-  // click Next
-  await page.waitForSelector(".btn");
-  await page.click(".btn");
+  await addFolder();
+  await fillVisa(1);
 
-  // // set up folders
-  // for (let i = 1; i < Number(process.env.FOLDERS_COUNT); i++) {
-  //   await page.waitForSelector("#p-tabpanel-0-label");
-  //   await page.click("#p-tabpanel-0-label");
-  // }
+  await next(1);
 
-  // // visa setup
-  // const foldersCount = Number(process.env.FOLDERS_COUNT);
+  await selectFolder(2);
+  await fillInput("surname", "saeed", 2);
+  await fillInput("name", "asdasd", 2);
+  await fillInput("birthLocalDate", "2002-12-1", 2);
+  await fillPassportInput("1234234234", 2);
+  await fillInput("applicantEmail", "nostva@gmail.com", 2);
+  await fillInput("phone", "1111970606", 2);
+  await fillInput("expectedDepartureLocalDate", "2023-12-1", 2);
 
-  const visaTypologyOptionIndex = Number(process.env.VISA_TYPOLOGY);
-  const visaCategoryOptionIndex = Number(process.env.VISA_CATEGORY);
-  const visaOptionIndex = Number(process.env.VISA);
+  async function fillInput(field, value, folderIndex) {
+    await page.waitForSelector(`input[name="${field}"]`);
+    const inputs = await page.$$(`input[name="${field}"]`);
+    await inputs[folderIndex].type(value);
+  }
+  async function fillPassportInput(value, folderIndex) {
+    await page.waitForSelector(`input[name="passport"]`);
+    const inputs = await page.$$(`input[name="passport"]`);
+    await inputs[folderIndex - 1].type(value);
+  }
 
-  await page.waitForSelector(".cat-typ-select p-dropdown .p-dropdown-trigger");
-  const buttons = await page.$$("p-dropdown .p-dropdown-trigger");
-  await setDropdownValue(buttons, 0, 0);
-  await setDropdownValue(buttons, 1, 1);
-  await setDropdownValue(buttons, 2, 1);
+  async function selectLocation(index = 0) {
+    await page.waitForSelector(".p-dropdown-trigger .ng-tns-c73-3");
+    await page.click(".p-dropdown-trigger .ng-tns-c73-3");
+    await page.waitForSelector(".p-dropdown-item");
+    const locations = await page.$$(".p-dropdown-item");
+    await locations[Number(index)].click();
 
-  await page.waitForSelector(".p-tabview-nav li a");
-  const folders = await page.$$(".p-tabview-nav li a");
-  await folders[0].click();
+    await page.waitForSelector("#flexCheckDefault");
+    const checkboxValue = true;
+    await page.evaluate((value) => {
+      const checkbox = document.querySelector("#flexCheckDefault");
+      checkbox.checked = value;
+      checkbox.dispatchEvent(new Event("change"));
+    }, checkboxValue);
+  }
 
-  await page.waitForSelector(".cat-typ-select p-dropdown .p-dropdown-trigger");
-  const buttons2 = await page.$$("p-dropdown .p-dropdown-trigger");
-  console.log(buttons2.length);
-  await setDropdownValue(buttons2, 5, 1);
+  async function addFolder() {
+    await page.waitForSelector(".p-tabview-nav li a");
+    const folders = await page.$$(".p-tabview-nav li a");
+    await folders[0].click();
+  }
 
-  // click Next
-  await page.waitForSelector(".btn[type='submit']");
-  const submit = await page.$$(".btn[type='submit']");
-  await submit[1].click();
+  async function selectFolder(index) {
+    await page.waitForSelector(".p-tabview-nav li a");
+    const folders = await page.$$(".p-tabview-nav li a");
+    await folders[index].click();
+  }
 
-  await page.waitForSelector('input[name="surname"]');
-  const sur_name = await page.$$('input[name="surname"]');
-  console.log(sur_name.length);
-  await sur_name[2].type("mohamed");
+  async function next(index) {
+    await page.waitForSelector(".btn[type='submit']");
+    const submit = await page.$$(".btn[type='submit']");
+    if (submit.length > 0) {
+      await submit[index].click();
+    }
+  }
 
-  await page.waitForSelector(".p-tabview-nav li a");
-  const folders2 = await page.$$(".p-tabview-nav li a");
-  await folders2[1].click();
+  async function next2() {
+    await page.waitForSelector(".btn[type='submit']");
+    const submit = await page.$$(".btn[type='submit']");
+    await submit[1].click();
+  }
 
-  await page.waitForSelector('input[name="surname"]');
-  const sur_name2 = await page.$$('input[name="surname"]');
-  console.log(sur_name2.length);
-  await sur_name2[0].type("saaed");
+  async function fillVisaTypology() {
+    await page.waitForSelector(
+      ".cat-typ-select p-dropdown .p-dropdown-trigger"
+    );
+    const buttons = await page.$$("p-dropdown .p-dropdown-trigger");
+    await setDropdownValue(buttons, 0, 0);
+  }
+
+  async function fillVisaCategory() {
+    await page.waitForSelector(
+      ".cat-typ-select p-dropdown .p-dropdown-trigger"
+    );
+    const buttons = await page.$$("p-dropdown .p-dropdown-trigger");
+    await setDropdownValue(buttons, 1, 1);
+  }
+
+  async function fillVisa(btnIndex) {
+    await page.waitForSelector(
+      ".cat-typ-select p-dropdown .p-dropdown-trigger"
+    );
+    const buttons = await page.$$("p-dropdown .p-dropdown-trigger");
+    await setDropdownValue(buttons, 2 + btnIndex * 3, 1);
+  }
 
   async function setDropdownValue(buttons, buttonIndex, dropIndex) {
     await buttons[buttonIndex].click();
     await page.waitForSelector(".p-dropdown-items p-dropdownitem li");
     const dropdownItems = await page.$$(".p-dropdown-items p-dropdownitem li");
-    console.log(buttonIndex, ":", dropdownItems.length, dropIndex);
     await dropdownItems[dropIndex].click();
   }
 })();
